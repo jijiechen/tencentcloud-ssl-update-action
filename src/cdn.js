@@ -1,18 +1,12 @@
 const CDN_SDK = require("tencentcloud-sdk-nodejs/tencentcloud/services/cdn");
-const path = require("path");
-
 const Client = CDN_SDK.cdn.v20180606.Client;
 
 class CDN {
   static getInput() {
-    return ["secret_id", "secret_key", "cdn_prefix"];
+    return ["secret_id", "secret_key"];
   }
 
   constructor(inputs) {
-    if (!inputs.cdn_prefix) {
-      return;
-    }
-
     const clientConfig = {
       credential: {
         secretId: inputs.secret_id,
@@ -23,19 +17,15 @@ class CDN {
       },
     };
 
-    this.cdn = new Client(clientConfig);
-    this.cdnPrefix = inputs.cdn_prefix;
-    if (this.cdnPrefix[this.cdnPrefix.length - 1] !== "/") {
-      this.cdnPrefix += "/";
-    }
+    this.cdnClient = new Client(clientConfig);
   }
 
-  async process(domain_name, certificate, private_key) {
-    if (!this.cdnPrefix) {
+  async process(domain_name, certID) {
+    if (!domain_name || !certID) {
       return;
     }
 
-    cdnResp = await this.cdn.DescribeDomainsConfig({"Filters":[{"Name":"domain","Value":[domain_name]}]});
+    const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain_name]}] });
     
     if (!cdnResp.Response || !cdnResp.Response.Domains){
       console.log('Invalid response from Tencent Cloud:');
@@ -48,7 +38,7 @@ class CDN {
       return;
     }
 
-    cdnCfg = cdnResp.Response.Domains[0];
+    const cdnCfg = cdnResp.Response.Domains[0];
     cdnCfg.HttpsBilling = { Switch: "on" };
     if (!cdnCfg.Https){
       cdnCfg.Https = defaultHttpsSettings;
@@ -63,13 +53,12 @@ class CDN {
       cdnCfg.Https.CertInfo.From = null;
     }
     
-    now = new Date()
+    const now = new Date()
     cdnCfg.Https.CertInfo.Message = `updated by GHA - utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`;
-    cdnCfg.Https.CertInfo.Certificate = certificate.toString('base64');
-    cdnCfg.Https.CertInfo.PrivateKey = private_key.toString('base64');
+    cdnCfg.Https.CertInfo.CertId = certID;
 
     console.log(`Updating certificate for domain ${domain_name}...`);
-    updatedResponse = await this.cdn.UpdateDomainConfig(cdnCfg)
+    updatedResponse = await this.cdnClient.UpdateDomainConfig(cdnCfg)
     console.log(JSON.stringify(updatedResponse));
   }
 }

@@ -10,6 +10,9 @@ inputs:
   secret_key:
     description: 'Tencent cloud secret key. Should be referred to a encrypted environment variable'
     required: true
+  cloud_service_type:
+    description: 'The cloud service type you want to update certificate for. Supported values: cdn, apigateway'
+    required: true
 
   domain_name:
     description: 'Domain name for which to update SSL certificate'

@@ -1,24 +1,22 @@
-const COS = require("./cos");
 const CDN = require("./cdn");
-const { readConfig, collectLocalFiles } = require("./utils");
+const { readConfig, ensureFilesExist } = require("./utils");
 
 async function main() {
   // 读取配置
   const config = readConfig(
     new Set([
-      "clean",
-      "local_path",
-      "remote_path",
-      ...COS.getInput(),
+      "domain_name",
+      "path_certificate",
+      "path_private_key",
       ...CDN.getInput(),
     ])
   );
-  const cosInstance = new COS(config);
-  const cdnInstance = new CDN(config);
-  // 读取所有文件
-  const localFiles = await collectLocalFiles(config.local_path);
-  await cosInstance.process(localFiles);
-  await cdnInstance.process(localFiles);
+
+  ck = readCertKey(config);
+  
+  const cdnOperator = new CDN(config);
+  
+  await cdnOperator.process(config.domain_name, ck.cert, ck.key);
 }
 
 main();

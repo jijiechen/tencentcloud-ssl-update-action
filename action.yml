@@ -1,5 +1,5 @@
-name: 'Tencent COS and CDN'
-description: 'Deploy files to tencent cloud COS and flush CDN cache'
+name: 'Cert Update for Tencent Cloud'
+description: 'Update SSL certificates for multiple Tencent Cloud products, including CDN, API Gateway and CLB'
 branding:
   icon: 'upload-cloud'
   color: 'blue'
@@ -10,27 +10,16 @@ inputs:
   secret_key:
     description: 'Tencent cloud secret key. Should be referred to a encrypted environment variable'
     required: true
-  cos_bucket:
-    description: 'COS bucket name'
-    required: true
-  cos_region:
-    description: 'COS bucket region'
-    required: true
-  cos_accelerate:
-    description: 'Set to true for using accelerate domain to upload files. Default is false'
+
+  domain_name:
+    description: 'Domain name for which to update SSL certificate'
     required: false
-  cdn_prefix:
-    description: 'CDN url prefix if you are using Tencent cloud CDN. Default is empty'
-    required: false
-  local_path:
-    description: 'Local path to be uploaded to COS. Directory or file is allowed'
+  path_certificate:
+    description: 'File path of the certificate. Should be referred to a encrypted environment variable'
     required: true
-  remote_path:
-    description: 'COS path to put the local files in on COS'
+  path_private_key:
+    description: 'File path of the private key. Should be referred to a encrypted environment variable'
     required: true
-  clean:
-    description: 'Set to true for cleaning files on COS path which are not existed in local path. Default is false'
-    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

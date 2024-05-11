@@ -1,30 +1,21 @@
 const core = require("@actions/core");
-const fse = require("fs-extra");
-const path = require("path");
+const fs = require("fs");
 
-async function walk(parentPath, walkFn) {
-  stats = await fse.lstat(parentPath);
-  if (!stats.isDirectory()) {
-    return await walkFn(parentPath);
+function readCertKey(config){
+
+  if(!fs.existsSync(config.path_certificate)){
+    console.log(`certificate file ${config.path_certificate} does not exist`);
+    process.exit(1);
+  }
+  if(!fs.existsSync(config.path_private_key)){
+    console.log(`private key file ${config.path_private_key} does not exist`);
+    process.exit(1);
   }
 
-  const dir = await fse.opendir(parentPath);
-  for await (const dirent of dir) {
-    await walk(path.join(parentPath, dirent.name), walkFn);
-  }
-}
+  cert = fs.readFileSync(config.path_certificate)
+  key = fs.readFileSync(config.path_private_key)
 
-async function collectLocalFiles(root) {
-  const absRoot = path.join(root);
-  const files = new Set();
-  await walk(absRoot, (path) => {
-    let p = path.substring(absRoot.length);
-    while (p[0] === "/") {
-      p = p.substring(1);
-    }
-    files.add(p);
-  });
-  return files;
+  return { cert, key }
 }
 
 function readConfig(fields) {
@@ -40,5 +31,5 @@ function readConfig(fields) {
 
 module.exports = {
   readConfig,
-  collectLocalFiles,
+  readCertKey,
 };

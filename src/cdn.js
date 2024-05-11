@@ -5,7 +5,7 @@ const Client = CDN_SDK.cdn.v20180606.Client;
 
 class CDN {
   static getInput() {
-    return ["secret_id", "secret_key", "remote_path", "cdn_prefix", "clean"];
+    return ["secret_id", "secret_key", "cdn_prefix"];
   }
 
   constructor(inputs) {
@@ -24,50 +24,81 @@ class CDN {
     };
 
     this.cdn = new Client(clientConfig);
-    this.clean = inputs.clean === "true";
     this.cdnPrefix = inputs.cdn_prefix;
-    this.remotePath = inputs.remote_path;
-
     if (this.cdnPrefix[this.cdnPrefix.length - 1] !== "/") {
       this.cdnPrefix += "/";
     }
   }
 
-  createUrl(file = "") {
-    let p = path.join(this.remotePath, file);
-    if (p[0] === "/") {
-      p = p.substr(1);
-    }
-    return this.cdnPrefix + p;
-  }
-
-  purgeAll() {
-    return this.cdn.PurgePathCache({
-      FlushType: "delete",
-      Paths: [this.createUrl()],
-    });
-  }
-
-  purgeUrls(urls) {
-    return this.cdn.PurgeUrlsCache({
-      Urls: urls,
-    });
-  }
-
-  async process(localFiles) {
+  async process(domain_name, certificate, private_key) {
     if (!this.cdnPrefix) {
       return;
     }
-    if (this.clean || localFiles.length > 200) {
-      await this.purgeAll();
-      console.log("Flush all CDN cache");
+
+    cdnResp = await this.cdn.DescribeDomainsConfig({"Filters":[{"Name":"domain","Value":[domain_name]}]});
+    
+    if (!cdnResp.Response || !cdnResp.Response.Domains){
+      console.log('Invalid response from Tencent Cloud:');
+      console.log(JSON.stringify(cdnResp));
       return;
     }
-    // 清空部分缓存
-    await this.purgeUrls(
-      Array.from(localFiles).map((it) => this.createUrl(it))
-    );
-    console.log(`Flush ${localFiles.size} CDN caches`);
+
+    if (cdnResp.Response.TotalNumber !== 1){
+      console.log(`Skipping updating ${domain_name}: There are ${cdnResp} cdn matched the domain.`);
+      return;
+    }
+
+    cdnCfg = cdnResp.Response.Domains[0];
+    cdnCfg.HttpsBilling = { Switch: "on" };
+    if (!cdnCfg.Https){
+      cdnCfg.Https = defaultHttpsSettings;
+    }
+    
+    if(!!cdnCfg.Https.SslStatus && cdnCfg.Https.SslStatus !== "closed"){
+      cdnCfg.Https.CertInfo.CertId = null;
+      cdnCfg.Https.CertInfo.CertName = null;
+      cdnCfg.Https.CertInfo.DeployTime = null;
+      cdnCfg.Https.CertInfo.ExpireTime = null;
+      cdnCfg.Https.CertInfo.Message = null;
+      cdnCfg.Https.CertInfo.From = null;
+    }
+    
+    now = new Date()
+    cdnCfg.Https.CertInfo.Message = `updated by GHA - utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`;
+    cdnCfg.Https.CertInfo.Certificate = certificate.toString('base64');
+    cdnCfg.Https.CertInfo.PrivateKey = private_key.toString('base64');
+
+    console.log(`Updating certificate for domain ${domain_name}...`);
+    updatedResponse = await this.cdn.UpdateDomainConfig(cdnCfg)
+    console.log(JSON.stringify(updatedResponse));
+  }
+}
+
+function defaultHttpsSettings(){
+  return {
+    CertInfo: {
+      CertId: null,
+      CertName: null,
+      Certificate: null,
+      DeployTime: '',
+      ExpireTime: '',
+      From: '',
+      Message: '',
+      PrivateKey: null
+    },
+    ClientCertInfo: {
+      CertName: null,
+      Certificate: null,
+      DeployTime: null,
+      ExpireTime: null
+    },
+    Hsts: { IncludeSubDomains: 'off', MaxAge: 0, Switch: 'off' },
+    Http2: 'on',
+    OcspStapling: 'off',
+    Spdy: 'off',
+    Switch: 'on',
+    TlsVersion: [ 'TLSv1', 'TLSv1.1', 'TLSv1.2' ],
+    VerifyClient: 'off'
   }
 }
 

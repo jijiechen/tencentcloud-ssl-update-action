@@ -21,10 +21,6 @@ class CDN {
   }
 
   async process(domain, certID) {
-    if (!domain || !certID) {
-      return;
-    }
-
     const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
     
     if (!cdnResp.Response || !cdnResp.Response.Domains){

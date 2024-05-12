@@ -30,7 +30,7 @@ class CDN {
     }
 
     if (cdnResp.Response.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain}: There are ${cdnResp} cdn matched the domain.`);
+      console.log(`Skipping updating ${domain}: There are ${cdnResp.Response.TotalNumber} cdn match the domain.`);
       return;
     }
 

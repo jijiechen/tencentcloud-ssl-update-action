@@ -11,7 +11,7 @@ inputs:
     description: 'Tencent cloud secret key. Should be referred to a encrypted environment variable'
     required: true
   cloud_service_type:
-    description: 'The cloud service type you want to update certificate for. Supported values: cdn, apigateway'
+    description: 'The cloud service type you want to update certificate for. Supported values: cdn, clb, apigateway'
     required: true
   region:
     description: 'Tencent cloud service region. Required when cloud_service_type is apigateway'
@@ -28,6 +28,15 @@ inputs:
     required: true
   apigw_service_id:
     description: 'API Gateway service id, required when cloud_service_type is apigateway'
+    required: false
+  clb_id:
+    description: 'The ID of the CLB, required when cloud_service_type is clb'
+    required: false
+  clb_port:
+    description: 'The port of the CLB, required when cloud_service_type is clb'
+    required: false
+  clb_protocol:
+    description: 'The protocol of the CLB, required when cloud_service_type is clb'
     required: false
 runs:
   using: 'node16'

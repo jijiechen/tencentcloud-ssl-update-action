@@ -9,7 +9,6 @@ class APIGateway {
   constructor(inputs) {
     if (!inputs.region || !inputs.apigw_service_id){
       console.log("These inputs must not be empty to update certificate for gateway api: region, apigw_service_id");
-      console.log(JSON.stringify(cdnResp));
       process.exit(1);
     }
 

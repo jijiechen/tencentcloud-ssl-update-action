@@ -1,9 +1,10 @@
 const core = require("@actions/core");
-const SSL = require("./ssl");
-const CDN = require("./cdn");
-const APIGateway = require("./apigateway");
+const SSL = require("./cloud/ssl");
+const CDN = require("./cloud/cdn");
+const APIGateway = require("./cloud/apigateway");
+const CLB = require("./cloud/clb");
 const { readConfig, readCertKey } = require("./utils");
-const supportedServiceTypes = ["cdn", "apigateway"]
+const supportedServiceTypes = ["cdn", "apigateway", "clb"];
 
 async function main() {
   let run_id;
@@ -22,6 +23,7 @@ async function main() {
       "path_private_key",
       ...SSL.getInput(),
       ...CDN.getInput(),
+      ...CLB.getInput(),
       ...APIGateway.getInput(),
     ])
   );
@@ -44,6 +46,10 @@ async function main() {
       case "cdn":
         const cdnOperator = new CDN(config, run_id);  
         await cdnOperator.process(config.domain_name, certID);
+        break;
+        case "clb":
+        const clbOperator = new CLB(config, run_id);  
+        await clbOperator.process(config.domain_name, certID);
         break;
         case "apigateway":
         const gwOperator = new APIGateway(config, run_id);  

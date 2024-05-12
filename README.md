@@ -56,3 +56,8 @@ GitHub Actions to update certificate for multiple Tencent Cloud products, includ
     path_private_key: ./certs/key.pem
     domain: abcd.example.com
 ```
+
+
+## Thanks
+
+This project is heavily inspired  by https://github.com/sylingd/tencent-cos-and-cdn-action

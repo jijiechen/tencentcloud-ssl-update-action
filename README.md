@@ -1,28 +1,10 @@
-# Update certificates for Tencent Cloud products
+# 腾讯云证书更新 GitHub Action
 
-GitHub Actions to update certificate for multiple Tencent Cloud products, including CDN, CLB, API Gateway, etc. This action can only be used to update certificates, it does not turn on the HTTPS feature for a service that is currently don't have it turned on.
+注意：此 Action 并非腾讯云官方提供，如要使用，请自担风险。
 
 该 Action 可以为腾讯云 CDN、CLB 和 API Gateway 产品更新服务器证书，在使用之前，要求具体的产品在此前已启用 HTTPS（即只能更新证书，不能用于从未启用 HTTPS 切换为启用 HTTPS）
 
-## Inputs
-
-**Required**
-
-- `secret_id` Tencent cloud secret id. Please provide the value from a secret.
-- `secret_key` Tencent cloud secret key. Please provide the value from a secret.
-- `cloud_service_type` The cloud service type you want to update certificate for. Supported values: `cdn`, `clb`, `apigateway`.
-- `path_certificate` File path of the certificate, in `pem` format, make sure this file contains the full certificate chain.
-- `path_private_key` File path of the private key, in `pem` format, not encrypted.
-
-**Required conditionally**
-
-- `region` Tencent cloud service region, required when `cloud_service_type` is `clb`, `apigateway`.
-- `domain` Domain name for which to update SSL certificate, required when `cloud_service_type` is `cdn`, `apigateway`.
-- `apigw_service_id` API Gateway service id, required when `cloud_service_type` is `apigateway`.
-- `clb_id` The ID of the CLB, required when `cloud_service_type` is `clb`
-- `clb_port` The port of the CLB, required when `cloud_service_type` is `clb`.
-- `clb_protocol` The protocol of the CLB, required when `cloud_service_type` is `clb`.
-
+[English README](./README.en.md)
 
 ## 输入参数
 
@@ -58,6 +40,6 @@ GitHub Actions to update certificate for multiple Tencent Cloud products, includ
 ```
 
 
-## Thanks
+## 鸣谢
 
-This project is heavily inspired  by https://github.com/sylingd/tencent-cos-and-cdn-action
+此项目的灵感来自 https://github.com/sylingd/tencent-cos-and-cdn-action

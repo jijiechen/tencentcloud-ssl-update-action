@@ -3,7 +3,7 @@ const Client = GW_SDK.apigateway.v20180808.Client;
 
 class APIGateway {
   static getInput() {
-    return ["secret_id", "secret_key", "region", "apigw_service_id"];
+    return ["secret_id", "secret_key", "region", "apigw_service_id", "domain"];
   }
 
   constructor(inputs) {

@@ -3,7 +3,7 @@ const Client = CDN_SDK.cdn.v20180606.Client;
 
 class CDN {
   static getInput() {
-    return ["secret_id", "secret_key"];
+    return ["secret_id", "secret_key", "domain"];
   }
 
   constructor(inputs) {

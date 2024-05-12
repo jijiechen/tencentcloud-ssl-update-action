@@ -18,7 +18,6 @@ async function main() {
   const config = readConfig(
     new Set([
       "cloud_service_type",
-      "domain_name",
       "path_certificate",
       "path_private_key",
       ...SSL.getInput(),
@@ -36,7 +35,7 @@ async function main() {
   try{
     const ck = readCertKey(config);
     const certUploader = new SSL(config, run_id);
-    const certID = certUploader.uploadCertificate(config.domain_name, ck.cert, ck.key);
+    const certID = certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
       console.log("Empty certificateID got from Tencent Cloud");
       process.exit(1);
@@ -45,19 +44,23 @@ async function main() {
     switch (config.cloud_service_type){
       case "cdn":
         const cdnOperator = new CDN(config, run_id);  
-        await cdnOperator.process(config.domain_name, certID);
+        await cdnOperator.process(config.domain, certID);
         break;
         case "clb":
         const clbOperator = new CLB(config, run_id);  
-        await clbOperator.process(config.domain_name, certID);
+        await clbOperator.process(config.domain, certID);
         break;
         case "apigateway":
         const gwOperator = new APIGateway(config, run_id);  
-        await gwOperator.process(config.domain_name, certID);
+        await gwOperator.process(config.domain, certID);
         break;
     }
 
-    console.log(`The certificate updating to '${config.cloud_service_type}' for domain '${config.domain_name}' was successful.`);
+    let domainMsg = ''
+    if (config.domain){
+      domainMsg = `for domain '${config.domain}' `
+    }
+    console.log(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
   }
   catch(ex){
     console.log('unexpected error: ' + ex.message);

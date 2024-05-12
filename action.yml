@@ -13,19 +13,20 @@ inputs:
   cloud_service_type:
     description: 'The cloud service type you want to update certificate for. Supported values: cdn, clb, apigateway'
     required: true
-  region:
-    description: 'Tencent cloud service region. Required when cloud_service_type is apigateway'
-    required: false
 
-  domain_name:
-    description: 'Domain name for which to update SSL certificate'
-    required: true
   path_certificate:
-    description: 'File path of the certificate. Should be referred to a encrypted environment variable'
+    description: 'File path of the certificate. '
     required: true
   path_private_key:
-    description: 'File path of the private key. Should be referred to a encrypted environment variable'
+    description: 'File path of the private key. '
     required: true
+
+  region:
+    description: 'Tencent cloud service region. Required when cloud_service_type is apigateway, clb'
+    required: false
+  domain:
+    description: 'Domain name for which to update SSL certificate'
+    required: false
   apigw_service_id:
     description: 'API Gateway service id, required when cloud_service_type is apigateway'
     required: false

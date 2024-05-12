@@ -26,7 +26,7 @@ class CLB {
     this.clbProtocol = inputs.clb_portocol;
   }
 
-  async process(domain, certID) {
+  async process(_, certID) {
     const clbResp = await this.clbClient.DescribeListeners({
         LoadBalancerId: this.clbID, 
         Port: this.clbPort, 

@@ -39824,7 +39824,7 @@ const Client = GW_SDK.apigateway.v20180808.Client;
 
 class APIGateway {
   static getInput() {
-    return ["secret_id", "secret_key", "region", "apigw_service_id"];
+    return ["secret_id", "secret_key", "region", "apigw_service_id", "domain"];
   }
 
   constructor(inputs) {
@@ -39890,7 +39890,7 @@ const Client = CDN_SDK.cdn.v20180606.Client;
 
 class CDN {
   static getInput() {
-    return ["secret_id", "secret_key"];
+    return ["secret_id", "secret_key", "domain"];
   }
 
   constructor(inputs) {
@@ -40010,7 +40010,7 @@ class CLB {
     this.clbProtocol = inputs.clb_portocol;
   }
 
-  async process(domain, certID) {
+  async process(_, certID) {
     const clbResp = await this.clbClient.DescribeListeners({
         LoadBalancerId: this.clbID, 
         Port: this.clbPort, 
@@ -42108,7 +42108,6 @@ async function main() {
   const config = readConfig(
     new Set([
       "cloud_service_type",
-      "domain_name",
       "path_certificate",
       "path_private_key",
       ...SSL.getInput(),
@@ -42126,7 +42125,7 @@ async function main() {
   try{
     const ck = readCertKey(config);
     const certUploader = new SSL(config, run_id);
-    const certID = certUploader.uploadCertificate(config.domain_name, ck.cert, ck.key);
+    const certID = certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
       console.log("Empty certificateID got from Tencent Cloud");
       process.exit(1);
@@ -42135,19 +42134,23 @@ async function main() {
     switch (config.cloud_service_type){
       case "cdn":
         const cdnOperator = new CDN(config, run_id);  
-        await cdnOperator.process(config.domain_name, certID);
+        await cdnOperator.process(config.domain, certID);
         break;
         case "clb":
         const clbOperator = new CLB(config, run_id);  
-        await clbOperator.process(config.domain_name, certID);
+        await clbOperator.process(config.domain, certID);
         break;
         case "apigateway":
         const gwOperator = new APIGateway(config, run_id);  
-        await gwOperator.process(config.domain_name, certID);
+        await gwOperator.process(config.domain, certID);
         break;
     }
 
-    console.log(`The certificate updating to '${config.cloud_service_type}' for domain '${config.domain_name}' was successful.`);
+    let domainMsg = ''
+    if (config.domain){
+      domainMsg = `for domain '${config.domain}' `
+    }
+    console.log(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
   }
   catch(ex){
     console.log('unexpected error: ' + ex.message);

@@ -20,12 +20,12 @@ class CDN {
     this.cdnClient = new Client(clientConfig);
   }
 
-  async process(domain_name, certID) {
-    if (!domain_name || !certID) {
+  async process(domain, certID) {
+    if (!domain || !certID) {
       return;
     }
 
-    const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain_name]}] });
+    const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
     
     if (!cdnResp.Response || !cdnResp.Response.Domains){
       console.log('Invalid response from Tencent Cloud:');
@@ -34,7 +34,7 @@ class CDN {
     }
 
     if (cdnResp.Response.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain_name}: There are ${cdnResp} cdn matched the domain.`);
+      console.log(`Skipping updating ${domain}: There are ${cdnResp} cdn matched the domain.`);
       return;
     }
 
@@ -57,9 +57,9 @@ class CDN {
     cdnCfg.Https.CertInfo.Message = `updated by GHA - utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`;
     cdnCfg.Https.CertInfo.CertId = certID;
 
-    console.log(`Updating certificate for domain ${domain_name}...`);
-    updatedResponse = await this.cdnClient.UpdateDomainConfig(cdnCfg)
-    console.log(JSON.stringify(updatedResponse));
+    console.log(`Updating certificate for domain ${domain}...`);
+    updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
+    console.log(JSON.stringify(updateResp));
   }
 }
 

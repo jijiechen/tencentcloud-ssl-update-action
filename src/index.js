@@ -23,23 +23,28 @@ async function main() {
     process.exit(1);
   }
   
+  try{
+    const ck = readCertKey(config);
+    const certID = SSL.uploadCertificate(domain_name, ck.cert, ck.key);
 
-  
-  const ck = readCertKey(config);
-  const certID = SSL.uploadCertificate(domain_name, ck.cert, ck.key)
-  
-  switch (config.cloud_service_type){
-    case "cdn":
-      const cdnOperator = new CDN(config);  
-      await cdnOperator.process(config.domain_name, certID);
-      break;
-      case "apigateway":
-      const gwOperator = new APIGateway(config);  
-      await gwOperator.process(config.domain_name, certID);
-      break;
+    switch (config.cloud_service_type){
+      case "cdn":
+        const cdnOperator = new CDN(config);  
+        await cdnOperator.process(config.domain_name, certID);
+        break;
+        case "apigateway":
+        const gwOperator = new APIGateway(config);  
+        await gwOperator.process(config.domain_name, certID);
+        break;
+    }
+
+    console.log(`The certificate updating to '${config.cloud_service_type}' for domain '${config.domain_name}' was successful.`);
   }
-  
-  console.log(`The certificate updating to '${config.cloud_service_type}' for domain '${config.domain_name}' was successfully.`);
+  catch(ex){
+    console.log('unexpected error: ' + ex.message);
+    console.log(ex.stack);
+    process.exit(1);
+  }  
 }
 
 main();

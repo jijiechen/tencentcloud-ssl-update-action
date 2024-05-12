@@ -30,7 +30,7 @@ class SSL {
     const sslResponse = await this.sslClient.UploadCertificate({
         CertificatePublicKey: certificate.toString('base64'),
         CertificatePrivateKey: privateKey.toString('base64'),
-        CertificateType: "SVR",
+        CertificateType: 'SVR',
         Alias: `${domain} -GHA@utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
     });
     

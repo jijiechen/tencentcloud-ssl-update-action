@@ -28,7 +28,9 @@ class APIGateway {
   }
 
   async process(domain, certID) {
-    const subDomainResp = await this.gwClient.DescribeServiceSubDomains(this.serviceId);
+    const subDomainResp = await this.gwClient.DescribeServiceSubDomains({
+      ServiceId: this.serviceId,
+    });
     if (!subDomainResp.Result){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(subDomainResp));

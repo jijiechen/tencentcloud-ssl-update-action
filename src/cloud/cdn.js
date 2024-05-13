@@ -52,6 +52,24 @@ class CDN {
     const now = new Date()
     cdnCfg.Https.CertInfo.Message = `updated by GHA - utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`;
     cdnCfg.Https.CertInfo.CertId = certID;
+    const notSupportedFields = [
+      'Advance',           'AdvanceSet',
+      'AppId',             'Cname',
+      'Compatibility',     'CreateTime',
+      'Disable',           'EdgeOne',
+      'ImageOptimization', 'Ipv6',
+      'Md5Compare',        'MigrateEo',
+      'ParentHost',        'Product',
+      'Readonly',          'ResourceId',
+      'ResourceTags',      'RuleEngine',
+      'SCdnIpFilter',      'SaaSSSLCertChallenge',
+      'SecurityConfig',    'ShareCache',
+      'SourceLimit',       'Status',
+      'Tag',               'UpdateTime'
+    ];
+    notSupportedFields.forEach(k =>{
+      delete(cdnCfg[k])
+    });
 
     console.log(`Updating certificate for domain ${domain}...`);
     updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);

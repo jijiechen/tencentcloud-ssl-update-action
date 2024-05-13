@@ -37,7 +37,7 @@ class APIGateway {
       process.exit(1);
     }
     
-    const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain);
+    const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain)[0];
     if (!targetSubDomain){
       console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
       process.exit(1);

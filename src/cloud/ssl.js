@@ -28,8 +28,8 @@ class SSL {
 
     console.log(`Uploading certificate for domain '${domain}'...`);
     const sslResponse = await this.sslClient.UploadCertificate({
-        CertificatePublicKey: certificate.toString('base64'),
-        CertificatePrivateKey: privateKey.toString('base64'),
+        CertificatePublicKey: certificate.toString(),
+        CertificatePrivateKey: privateKey.toString(),
         CertificateType: 'SVR',
         Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()} GHA#${this.runId}`,
     });

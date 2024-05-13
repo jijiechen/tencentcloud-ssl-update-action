@@ -39863,6 +39863,24 @@ class APIGateway {
       console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
       process.exit(1);
     }
+    // console.log(JSON.stringify(targetSubDomain));
+
+    let portMapping;
+    if (!targetSubDomain.IsDefaultMapping){
+      const pmResp = await this.gwClient.DescribeServiceSubDomainMappings({
+        ServiceId: this.serviceId,
+        SubDomain: domain,
+      });
+
+      if (!pmResp.Result){
+        console.log('Invalid response from Tencent Cloud:');
+        console.log(JSON.stringify(pmResp));
+        process.exit(1);
+      }
+      
+      portMapping = pmResp.Result.PathMappingSet;
+    }
+
     
     const req = {
       ServiceId: this.serviceId,
@@ -39873,7 +39891,11 @@ class APIGateway {
       NetType:  targetSubDomain.NetType,
       IsForcedHttps: targetSubDomain.IsForcedHttps,
     }
+    if (!targetSubDomain.IsDefaultMapping){
+      req.PathMappingSet = portMapping;
+    }
 
+    // console.log(JSON.stringify(req));
     console.log(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
     const updateResp = await this.gwClient.ModifySubDomain(req);
     console.log(JSON.stringify(updateResp));

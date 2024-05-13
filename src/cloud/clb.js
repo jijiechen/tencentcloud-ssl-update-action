@@ -33,18 +33,18 @@ class CLB {
         Protocol: this.clbProtocol, 
     });
     
-    if (!clbResp.Response || !clbResp.Response.Listeners){
+    if (!clbResp.Listeners){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(clbResp));
+      process.exit(1);
+    }
+
+    if (clbResp.TotalCount !== 1){
+      console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.TotalCount} listeners match the clb query.`);
       return;
     }
 
-    if (clbResp.Response.TotalCount !== 1){
-      console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.Response.TotalCount} listeners match the clb query.`);
-      return;
-    }
-
-    const targetListner = clbResp.Response.Listeners[0];
+    const targetListner = clbResp.Listeners[0];
     if(!targetListner.Certificate){
         console.log(`Could not update certificate for clb ${this.clbID} on port ${this.clbPort}, it does not have an existing certificate.`);
         process.exit(1);

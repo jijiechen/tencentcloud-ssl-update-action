@@ -39850,13 +39850,13 @@ class APIGateway {
 
   async process(domain, certID) {
     const subDomainResp = await this.gwClient.DescribeServiceSubDomains(this.serviceId);
-    if (!subDomainResp.Response || !subDomainResp.Response.Result){
+    if (!subDomainResp.Result){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(subDomainResp));
       process.exit(1);
     }
     
-    const targetSubDomain = subDomainResp.Response.Result.DomainSet.filter(x => x.DomainName === domain);
+    const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain);
     if (!targetSubDomain){
       console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
       process.exit(1);
@@ -39910,18 +39910,18 @@ class CDN {
   async process(domain, certID) {
     const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
     
-    if (!cdnResp.Response || !cdnResp.Response.Domains){
+    if (!cdnResp.Domains){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(cdnResp));
+      process.exit(1);
+    }
+
+    if (cdnResp.TotalNumber !== 1){
+      console.log(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
       return;
     }
 
-    if (cdnResp.Response.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain}: There are ${cdnResp.Response.TotalNumber} cdn match the domain.`);
-      return;
-    }
-
-    const cdnCfg = cdnResp.Response.Domains[0];
+    const cdnCfg = cdnResp.Domains[0];
     cdnCfg.HttpsBilling = { Switch: "on" };
     if (!cdnCfg.Https){
       cdnCfg.Https = defaultHttpsSettings;
@@ -40017,18 +40017,18 @@ class CLB {
         Protocol: this.clbProtocol, 
     });
     
-    if (!clbResp.Response || !clbResp.Response.Listeners){
+    if (!clbResp.Listeners){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(clbResp));
+      process.exit(1);
+    }
+
+    if (clbResp.TotalCount !== 1){
+      console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.TotalCount} listeners match the clb query.`);
       return;
     }
 
-    if (clbResp.Response.TotalCount !== 1){
-      console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.Response.TotalCount} listeners match the clb query.`);
-      return;
-    }
-
-    const targetListner = clbResp.Response.Listeners[0];
+    const targetListner = clbResp.Listeners[0];
     if(!targetListner.Certificate){
         console.log(`Could not update certificate for clb ${this.clbID} on port ${this.clbPort}, it does not have an existing certificate.`);
         process.exit(1);

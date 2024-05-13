@@ -29,13 +29,13 @@ class APIGateway {
 
   async process(domain, certID) {
     const subDomainResp = await this.gwClient.DescribeServiceSubDomains(this.serviceId);
-    if (!subDomainResp.Response || !subDomainResp.Response.Result){
+    if (!subDomainResp.Result){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(subDomainResp));
       process.exit(1);
     }
     
-    const targetSubDomain = subDomainResp.Response.Result.DomainSet.filter(x => x.DomainName === domain);
+    const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain);
     if (!targetSubDomain){
       console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
       process.exit(1);

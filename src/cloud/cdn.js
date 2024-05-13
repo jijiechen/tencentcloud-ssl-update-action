@@ -23,18 +23,18 @@ class CDN {
   async process(domain, certID) {
     const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
     
-    if (!cdnResp.Response || !cdnResp.Response.Domains){
+    if (!cdnResp.Domains){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(cdnResp));
+      process.exit(1);
+    }
+
+    if (cdnResp.TotalNumber !== 1){
+      console.log(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
       return;
     }
 
-    if (cdnResp.Response.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain}: There are ${cdnResp.Response.TotalNumber} cdn match the domain.`);
-      return;
-    }
-
-    const cdnCfg = cdnResp.Response.Domains[0];
+    const cdnCfg = cdnResp.Domains[0];
     cdnCfg.HttpsBilling = { Switch: "on" };
     if (!cdnCfg.Https){
       cdnCfg.Https = defaultHttpsSettings;

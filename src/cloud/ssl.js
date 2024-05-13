@@ -34,13 +34,13 @@ class SSL {
         Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()} GHA#${this.runId}`,
     });
     
-    if (!sslResponse.Response || !sslResponse.Response.CertificateId){
+    if (!sslResponse.CertificateId){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(sslResponse));
       process.exit(1);
     }
 
-    const certId = sslResponse.Response.CertificateId
+    const certId = sslResponse.CertificateId
     console.log(`Uploading was successful. Certificate ID: '${certId}'`);
     return certId;
   }

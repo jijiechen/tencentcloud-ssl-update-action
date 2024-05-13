@@ -40081,19 +40081,19 @@ class SSL {
 
     console.log(`Uploading certificate for domain '${domain}'...`);
     const sslResponse = await this.sslClient.UploadCertificate({
-        CertificatePublicKey: certificate.toString('base64'),
-        CertificatePrivateKey: privateKey.toString('base64'),
+        CertificatePublicKey: certificate.toString(),
+        CertificatePrivateKey: privateKey.toString(),
         CertificateType: 'SVR',
         Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()} GHA#${this.runId}`,
     });
     
-    if (!sslResponse.Response || !sslResponse.Response.CertificateId){
+    if (!sslResponse.CertificateId){
       console.log('Invalid response from Tencent Cloud:');
       console.log(JSON.stringify(sslResponse));
       process.exit(1);
     }
 
-    const certId = sslResponse.Response.CertificateId
+    const certId = sslResponse.CertificateId
     console.log(`Uploading was successful. Certificate ID: '${certId}'`);
     return certId;
   }

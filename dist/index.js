@@ -39872,7 +39872,7 @@ class APIGateway {
       IsForcedHttps: targetSubDomain.IsForcedHttps,
     }
 
-    console.log(`Updating certificate for domain ${domain}...`);
+    console.log(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
     const updateResp = await this.gwClient.ModifySubDomain(req);
     console.log(JSON.stringify(updateResp));
   }
@@ -39958,8 +39958,8 @@ class CDN {
       delete(cdnCfg[k])
     });
 
-    console.log(`Updating certificate for domain ${domain}...`);
-    updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
+    console.log(`Updating cdn for domain ${domain}, certID: ${certID}...`);
+    const updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
     console.log(JSON.stringify(updateResp));
   }
 }
@@ -42143,7 +42143,7 @@ async function main() {
   try{
     const ck = readCertKey(config);
     const certUploader = new SSL(config, run_id);
-    const certID = certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
+    const certID = await certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
       console.log("Empty certificateID got from Tencent Cloud");
       process.exit(1);

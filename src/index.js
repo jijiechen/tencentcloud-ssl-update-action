@@ -35,7 +35,7 @@ async function main() {
   try{
     const ck = readCertKey(config);
     const certUploader = new SSL(config, run_id);
-    const certID = certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
+    const certID = await certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
       console.log("Empty certificateID got from Tencent Cloud");
       process.exit(1);

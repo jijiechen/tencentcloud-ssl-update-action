@@ -51,7 +51,7 @@ class APIGateway {
       IsForcedHttps: targetSubDomain.IsForcedHttps,
     }
 
-    console.log(`Updating certificate for domain ${domain}...`);
+    console.log(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
     const updateResp = await this.gwClient.ModifySubDomain(req);
     console.log(JSON.stringify(updateResp));
   }

@@ -71,8 +71,8 @@ class CDN {
       delete(cdnCfg[k])
     });
 
-    console.log(`Updating certificate for domain ${domain}...`);
-    updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
+    console.log(`Updating cdn for domain ${domain}, certID: ${certID}...`);
+    const updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
     console.log(JSON.stringify(updateResp));
   }
 }

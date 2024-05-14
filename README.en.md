@@ -27,7 +27,7 @@ GitHub Actions to update certificate for multiple Tencent Cloud products, includ
 
 ```yaml
 - name: Update cert
-  uses: jijiechen/tencentcloud-ssl-update-action@master
+  uses: jijiechen/tencentcloud-ssl-update-action@v0.9.0
   with:
     secret_id: YOUR_SECRET_ID
     secret_key: YOUR_SECRET_KEY

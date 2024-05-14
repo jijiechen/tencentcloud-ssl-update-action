@@ -40110,7 +40110,7 @@ class SSL {
     return ["secret_id", "secret_key"];
   }
 
-  constructor(inputs, runId) {    
+  constructor(inputs) {    
     const clientConfig = {
       credential: {
         secretId: inputs.secret_id,
@@ -40122,7 +40122,6 @@ class SSL {
     };
 
     this.sslClient = new Client(clientConfig);
-    this.runId = runId;
   }
 
   async uploadCertificate(domain, certificate, privateKey) {
@@ -40133,7 +40132,7 @@ class SSL {
         CertificatePublicKey: certificate.toString(),
         CertificatePrivateKey: privateKey.toString(),
         CertificateType: 'SVR',
-        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()} GHA#${this.runId}`,
+        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
     });
     
     if (!sslResponse.CertificateId){
@@ -42146,13 +42145,6 @@ const { readConfig, readCertKey } = __nccwpck_require__(1608);
 const supportedServiceTypes = ["cdn", "apigateway", "clb"];
 
 async function main() {
-  let run_id;
-  const contextString = core.getInput('github_context');
-  if (contextString) {
-    const context = JSON.parse(contextString);
-    run_id = context.run_id;
-  }
-
   // 读取配置
   const config = readConfig(
     new Set([
@@ -42173,7 +42165,7 @@ async function main() {
   
   try{
     const ck = readCertKey(config);
-    const certUploader = new SSL(config, run_id);
+    const certUploader = new SSL(config);
     const certID = await certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
       console.log("Empty certificateID got from Tencent Cloud");
@@ -42182,15 +42174,15 @@ async function main() {
 
     switch (config.cloud_service_type){
       case "cdn":
-        const cdnOperator = new CDN(config, run_id);  
+        const cdnOperator = new CDN(config);  
         await cdnOperator.process(config.domain, certID);
         break;
         case "clb":
-        const clbOperator = new CLB(config, run_id);  
+        const clbOperator = new CLB(config);  
         await clbOperator.process(config.domain, certID);
         break;
         case "apigateway":
-        const gwOperator = new APIGateway(config, run_id);  
+        const gwOperator = new APIGateway(config);  
         await gwOperator.process(config.domain, certID);
         break;
     }

@@ -8,7 +8,7 @@ class SSL {
     return ["secret_id", "secret_key"];
   }
 
-  constructor(inputs, runId) {    
+  constructor(inputs) {    
     const clientConfig = {
       credential: {
         secretId: inputs.secret_id,
@@ -20,7 +20,6 @@ class SSL {
     };
 
     this.sslClient = new Client(clientConfig);
-    this.runId = runId;
   }
 
   async uploadCertificate(domain, certificate, privateKey) {
@@ -31,7 +30,7 @@ class SSL {
         CertificatePublicKey: certificate.toString(),
         CertificatePrivateKey: privateKey.toString(),
         CertificateType: 'SVR',
-        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()} GHA#${this.runId}`,
+        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
     });
     
     if (!sslResponse.CertificateId){

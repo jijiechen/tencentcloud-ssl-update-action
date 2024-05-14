@@ -40031,7 +40031,7 @@ const Client = CLB_SDK.clb.v20180317.Client;
 
 class CLB {
   static getInput() {
-    return ["secret_id", "secret_key", "clb_id", "clb_port", "clb_portocol"];
+    return ["secret_id", "secret_key", "clb_id", "clb_port", "clb_protocol"];
   }
 
   constructor(inputs) {
@@ -40052,7 +40052,7 @@ class CLB {
     if (typeof inputs.clb_port === "string"){
       this.clbPort = parseInt(inputs.clb_port);
     }
-    this.clbProtocol = inputs.clb_portocol;
+    this.clbProtocol = inputs.clb_protocol;
   }
 
   async process(_, certID) {

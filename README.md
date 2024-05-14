@@ -23,7 +23,7 @@
 - `apigw_service_id` API 网关的服务标识，当 `cloud_service_type` 值为 `apigateway` 时必填。
 - `clb_id` CLB 实例的标识，当 `cloud_service_type` 值为 `clb` 时必填。
 - `clb_port` CLB 侦听器的端口，当 `cloud_service_type` 值为 `clb` 时必填。
-- `clb_protocol` CLB 侦听器的协议，当 `cloud_service_type` 值为 `clb` 时必填。
+- `clb_protocol` CLB 侦听器的协议，当 `cloud_service_type` 值为 `clb` 时必填。可能的值有 TCP | UDP | HTTP | HTTPS | TCP_SSL | QUIC。
 
 ## 示例
 

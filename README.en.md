@@ -19,9 +19,9 @@ GitHub Actions to update certificate for multiple Tencent Cloud products, includ
 - `region` Tencent cloud service region, required when `cloud_service_type` is `clb`, `apigateway`.
 - `domain` Domain name for which to update SSL certificate, required when `cloud_service_type` is `cdn`, `apigateway`.
 - `apigw_service_id` API Gateway service id, required when `cloud_service_type` is `apigateway`.
-- `clb_id` The ID of the CLB, required when `cloud_service_type` is `clb`
+- `clb_id` The ID of the CLB, required when `cloud_service_type` is `clb`.
 - `clb_port` The port of the CLB, required when `cloud_service_type` is `clb`.
-- `clb_protocol` The protocol of the CLB, required when `cloud_service_type` is `clb`.
+- `clb_protocol` The protocol of the CLB, required when `cloud_service_type` is `clb`, possible values are TCP | UDP | HTTP | HTTPS | TCP_SSL | QUIC.
 
 ## Demo
 

@@ -40049,6 +40049,9 @@ class CLB {
     this.clbClient = new Client(clientConfig);
     this.clbID = inputs.clb_id;
     this.clbPort = inputs.clb_port;
+    if (typeof inputs.clb_port === "string"){
+      this.clbPort = parseInt(inputs.clb_port);
+    }
     this.clbProtocol = inputs.clb_portocol;
   }
 
@@ -40064,7 +40067,7 @@ class CLB {
       console.log(JSON.stringify(clbResp));
       process.exit(1);
     }
-
+    
     if (clbResp.TotalCount !== 1){
       console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.TotalCount} listeners match the clb query.`);
       return;
@@ -40077,9 +40080,13 @@ class CLB {
     }
 
     console.log(`Updating certificate for clb ${this.clbID} on port ${this.clbPort}...`);
-    updateResp = await this.clbClient.ReplaceCertForLoadBalancers({
+    const updateResp = await this.clbClient.ModifyListener({
+      LoadBalancerId: this.clbID,
+      ListenerId: targetListner.ListenerId,
+      Certificate: {
         SSLMode: targetListner.Certificate.SSLMode,
         CertId: certID,
+      }
     });
     console.log(JSON.stringify(updateResp));
   }

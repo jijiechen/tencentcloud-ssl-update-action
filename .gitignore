@@ -27,3 +27,4 @@ yarn.lock
 
 # test
 test
+local-test.js

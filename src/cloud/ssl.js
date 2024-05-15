@@ -1,5 +1,6 @@
 // https://cloud.tencent.com/document/api/400/41665
 
+const core = require("@actions/core");
 const SSL_SDK = require("tencentcloud-sdk-nodejs/tencentcloud/services/ssl");
 const Client = SSL_SDK.ssl.v20191205.Client;
 
@@ -25,22 +26,29 @@ class SSL {
   async uploadCertificate(domain, certificate, privateKey) {
     const now = new Date()
 
-    console.log(`Uploading certificate for domain '${domain}'...`);
-    const sslResponse = await this.sslClient.UploadCertificate({
-        CertificatePublicKey: certificate.toString(),
-        CertificatePrivateKey: privateKey.toString(),
-        CertificateType: 'SVR',
-        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
-    });
+    core.info(`Uploading certificate for domain '${domain}'...`);
+    const uploadReq = {
+      CertificatePublicKey: certificate.toString(),
+      CertificatePrivateKey: privateKey.toString(),
+      CertificateType: 'SVR',
+      Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
+    };
+    core.debug('Uploading certificate:');
+    core.debug(JSON.stringify(uploadReq));
+    const sslResponse = await this.sslClient.UploadCertificate(uploadReq);
+    
+    core.debug("Got response from tencent cloud:");
+    core.debug(JSON.stringify(sslResponse));
     
     if (!sslResponse.CertificateId){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(sslResponse));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(sslResponse));
+      core.setFailed();
       process.exit(1);
     }
 
     const certId = sslResponse.CertificateId
-    console.log(`Uploading was successful. Certificate ID: '${certId}'`);
+    core.info(`Uploading was successful. Certificate ID: '${certId}'`);
     return certId;
   }
 }

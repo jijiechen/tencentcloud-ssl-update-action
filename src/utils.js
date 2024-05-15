@@ -3,16 +3,19 @@ const fs = require("fs");
 
 function readCertKey(config){
   if (!config.path_certificate || !config.path_private_key){
-    console.log(`path_certificate and path_private_key must not be empty`);
+    core.info(`path_certificate and path_private_key must not be empty`);
+    core.setFailed();
     process.exit(1);
   }
 
   if(!fs.existsSync(config.path_certificate)){
-    console.log(`certificate file ${config.path_certificate} does not exist`);
+    core.info(`certificate file ${config.path_certificate} does not exist`);
+    core.setFailed();
     process.exit(1);
   }
   if(!fs.existsSync(config.path_private_key)){
-    console.log(`private key file ${config.path_private_key} does not exist`);
+    core.info(`private key file ${config.path_private_key} does not exist`);
+    core.setFailed();
     process.exit(1);
   }
 

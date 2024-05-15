@@ -1,3 +1,4 @@
+const core = require("@actions/core");
 const GW_SDK = require("tencentcloud-sdk-nodejs/tencentcloud/services/apigateway");
 const Client = GW_SDK.apigateway.v20180808.Client;
 
@@ -8,7 +9,8 @@ class APIGateway {
 
   constructor(inputs) {
     if (!inputs.region || !inputs.apigw_service_id){
-      console.log("These inputs must not be empty to update certificate for gateway api: region, apigw_service_id");
+      core.info("These inputs must not be empty to update certificate for gateway api: region, apigw_service_id");
+      core.setFailed();
       process.exit(1);
     }
 
@@ -28,38 +30,51 @@ class APIGateway {
   }
 
   async process(domain, certID) {
-    const subDomainResp = await this.gwClient.DescribeServiceSubDomains({
+    const describeReq = {
       ServiceId: this.serviceId,
-    });
+    };
+    core.debug('Getting information for api gateway service ' + this.serviceId);
+    core.debug(JSON.stringify(describeReq));
+    const subDomainResp = await this.gwClient.DescribeServiceSubDomains(describeReq);
+    
+    core.debug('Got response from tencent cloud:');
+    core.debug(JSON.stringify(subDomainResp));
+
     if (!subDomainResp.Result){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(subDomainResp));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(subDomainResp));
+      core.setFailed();
       process.exit(1);
     }
     
     const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain)[0];
     if (!targetSubDomain){
-      console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
+      core.info(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
+      core.setFailed();
       process.exit(1);
     }
-    // console.log(JSON.stringify(targetSubDomain));
 
     let portMapping;
     if (!targetSubDomain.IsDefaultMapping){
-      const pmResp = await this.gwClient.DescribeServiceSubDomainMappings({
+      const pmReq = {
         ServiceId: this.serviceId,
         SubDomain: domain,
-      });
-
+      };
+      core.debug('There is custom post mapping, getting port mapping information:');
+      core.debug(JSON.stringify(pmReq));
+      const pmResp = await this.gwClient.DescribeServiceSubDomainMappings(pmReq);
+      
+      core.debug('Got response from tencent cloud:');
+      core.debug(JSON.stringify(pmResp));
       if (!pmResp.Result){
-        console.log('Invalid response from Tencent Cloud:');
-        console.log(JSON.stringify(pmResp));
+        core.info('Invalid response from Tencent Cloud:');
+        core.info(JSON.stringify(pmResp));
+        core.setFailed();
         process.exit(1);
       }
       
       portMapping = pmResp.Result.PathMappingSet;
     }
-
     
     const req = {
       ServiceId: this.serviceId,
@@ -74,10 +89,12 @@ class APIGateway {
       req.PathMappingSet = portMapping;
     }
 
-    // console.log(JSON.stringify(req));
-    console.log(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
+    core.info(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
+    core.debug(JSON.stringify(req));
+
     const updateResp = await this.gwClient.ModifySubDomain(req);
-    console.log(JSON.stringify(updateResp));
+    core.debug('Got response from tencent cloud:');
+    core.info(JSON.stringify(updateResp));
   }
 }
 

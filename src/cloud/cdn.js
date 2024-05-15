@@ -1,3 +1,4 @@
+const core = require("@actions/core");
 const CDN_SDK = require("tencentcloud-sdk-nodejs/tencentcloud/services/cdn");
 const Client = CDN_SDK.cdn.v20180606.Client;
 
@@ -21,16 +22,22 @@ class CDN {
   }
 
   async process(domain, certID) {
-    const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
+    const describeReq = {Filters: [{ Name:"domain", Value:[domain]}] };
+    core.debug('Getting existing domain config for cdn domain ' + domain);
+    core.debug(JSON.stringify(describeReq));
     
+    const cdnResp = await this.cdnClient.DescribeDomainsConfig(describeReq);
+    
+    core.debug('Got response from tencent cloud:');
+    core.debug(JSON.stringify(cdnResp));
     if (!cdnResp.Domains){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(cdnResp));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(cdnResp));
       process.exit(1);
     }
 
     if (cdnResp.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
+      core.info(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
       return;
     }
 
@@ -71,9 +78,11 @@ class CDN {
       delete(cdnCfg[k])
     });
 
-    console.log(`Updating cdn for domain ${domain}, certID: ${certID}...`);
+    core.debug('Getting existing domain config for cdn domain ' + domain);
+    core.debug(JSON.stringify(cdnCfg));
     const updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
-    console.log(JSON.stringify(updateResp));
+    core.debug('Got response from tencent cloud:');
+    core.info(JSON.stringify(updateResp));
   }
 }
 

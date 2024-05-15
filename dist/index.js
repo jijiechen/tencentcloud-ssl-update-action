@@ -39819,6 +39819,7 @@ module.exports.implForWrapper = function (wrapper) {
 /***/ 8055:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+const core = __nccwpck_require__(2186);
 const GW_SDK = __nccwpck_require__(7789);
 const Client = GW_SDK.apigateway.v20180808.Client;
 
@@ -39829,7 +39830,8 @@ class APIGateway {
 
   constructor(inputs) {
     if (!inputs.region || !inputs.apigw_service_id){
-      console.log("These inputs must not be empty to update certificate for gateway api: region, apigw_service_id");
+      core.info("These inputs must not be empty to update certificate for gateway api: region, apigw_service_id");
+      core.setFailed();
       process.exit(1);
     }
 
@@ -39849,38 +39851,51 @@ class APIGateway {
   }
 
   async process(domain, certID) {
-    const subDomainResp = await this.gwClient.DescribeServiceSubDomains({
+    const describeReq = {
       ServiceId: this.serviceId,
-    });
+    };
+    core.debug('Getting information for api gateway service ' + this.serviceId);
+    core.debug(JSON.stringify(describeReq));
+    const subDomainResp = await this.gwClient.DescribeServiceSubDomains(describeReq);
+    
+    core.debug('Got response from tencent cloud:');
+    core.debug(JSON.stringify(subDomainResp));
+
     if (!subDomainResp.Result){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(subDomainResp));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(subDomainResp));
+      core.setFailed();
       process.exit(1);
     }
     
     const targetSubDomain = subDomainResp.Result.DomainSet.filter(x => x.DomainName === domain)[0];
     if (!targetSubDomain){
-      console.log(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
+      core.info(`Domain name ${domain} is not being used in api gateway service ${this.serviceId}`);
+      core.setFailed();
       process.exit(1);
     }
-    // console.log(JSON.stringify(targetSubDomain));
 
     let portMapping;
     if (!targetSubDomain.IsDefaultMapping){
-      const pmResp = await this.gwClient.DescribeServiceSubDomainMappings({
+      const pmReq = {
         ServiceId: this.serviceId,
         SubDomain: domain,
-      });
-
+      };
+      core.debug('There is custom post mapping, getting port mapping information:');
+      core.debug(JSON.stringify(pmReq));
+      const pmResp = await this.gwClient.DescribeServiceSubDomainMappings(pmReq);
+      
+      core.debug('Got response from tencent cloud:');
+      core.debug(JSON.stringify(pmResp));
       if (!pmResp.Result){
-        console.log('Invalid response from Tencent Cloud:');
-        console.log(JSON.stringify(pmResp));
+        core.info('Invalid response from Tencent Cloud:');
+        core.info(JSON.stringify(pmResp));
+        core.setFailed();
         process.exit(1);
       }
       
       portMapping = pmResp.Result.PathMappingSet;
     }
-
     
     const req = {
       ServiceId: this.serviceId,
@@ -39895,10 +39910,12 @@ class APIGateway {
       req.PathMappingSet = portMapping;
     }
 
-    // console.log(JSON.stringify(req));
-    console.log(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
+    core.info(`Updating apigateway for domain ${domain}, certID: ${certID}......`);
+    core.debug(JSON.stringify(req));
+
     const updateResp = await this.gwClient.ModifySubDomain(req);
-    console.log(JSON.stringify(updateResp));
+    core.debug('Got response from tencent cloud:');
+    core.info(JSON.stringify(updateResp));
   }
 }
 
@@ -39909,6 +39926,7 @@ module.exports = APIGateway;
 /***/ 5475:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+const core = __nccwpck_require__(2186);
 const CDN_SDK = __nccwpck_require__(465);
 const Client = CDN_SDK.cdn.v20180606.Client;
 
@@ -39932,16 +39950,22 @@ class CDN {
   }
 
   async process(domain, certID) {
-    const cdnResp = await this.cdnClient.DescribeDomainsConfig({Filters: [{ Name:"domain", Value:[domain]}] });
+    const describeReq = {Filters: [{ Name:"domain", Value:[domain]}] };
+    core.debug('Getting existing domain config for cdn domain ' + domain);
+    core.debug(JSON.stringify(describeReq));
     
+    const cdnResp = await this.cdnClient.DescribeDomainsConfig(describeReq);
+    
+    core.debug('Got response from tencent cloud:');
+    core.debug(JSON.stringify(cdnResp));
     if (!cdnResp.Domains){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(cdnResp));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(cdnResp));
       process.exit(1);
     }
 
     if (cdnResp.TotalNumber !== 1){
-      console.log(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
+      core.info(`Skipping updating ${domain}: There are ${cdnResp.TotalNumber} cdn match the domain.`);
       return;
     }
 
@@ -39982,9 +40006,11 @@ class CDN {
       delete(cdnCfg[k])
     });
 
-    console.log(`Updating cdn for domain ${domain}, certID: ${certID}...`);
+    core.debug('Getting existing domain config for cdn domain ' + domain);
+    core.debug(JSON.stringify(cdnCfg));
     const updateResp = await this.cdnClient.UpdateDomainConfig(cdnCfg);
-    console.log(JSON.stringify(updateResp));
+    core.debug('Got response from tencent cloud:');
+    core.info(JSON.stringify(updateResp));
   }
 }
 
@@ -40026,6 +40052,7 @@ module.exports = CDN;
 
 //  https://cloud.tencent.com/document/api/214/36907
 
+const core = __nccwpck_require__(2186);
 const CLB_SDK = __nccwpck_require__(3815);
 const Client = CLB_SDK.clb.v20180317.Client;
 
@@ -40056,39 +40083,48 @@ class CLB {
   }
 
   async process(_, certID) {
-    const clbResp = await this.clbClient.DescribeListeners({
-        LoadBalancerId: this.clbID, 
-        Port: this.clbPort, 
-        Protocol: this.clbProtocol, 
-    });
+    const describeReq = {
+      LoadBalancerId: this.clbID, 
+      Port: this.clbPort, 
+      Protocol: this.clbProtocol, 
+    };
+    core.debug('Getting listener information from clb ' + this.clbID + " on port " + this.clbPort);
+    core.debug(JSON.stringify(describeReq));
     
+    const clbResp = await this.clbClient.DescribeListeners(describeReq);
+    
+    core.debug('Got response from tencent cloud:');
+    core.debug(JSON.stringify(clbResp));
     if (!clbResp.Listeners){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(clbResp));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(clbResp));
       process.exit(1);
     }
     
     if (clbResp.TotalCount !== 1){
-      console.log(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.TotalCount} listeners match the clb query.`);
+      core.info(`Skipping updating clb ${this.clbID} on port ${this.clbPort}: There are ${clbResp.TotalCount} listeners match the clb query.`);
       return;
     }
-
+    
     const targetListner = clbResp.Listeners[0];
     if(!targetListner.Certificate){
-        console.log(`Could not update certificate for clb ${this.clbID} on port ${this.clbPort}, it does not have an existing certificate.`);
-        process.exit(1);
+      core.info(`Could not update certificate for clb ${this.clbID} on port ${this.clbPort}, it does not have an existing certificate.`);
+      process.exit(1);
     }
 
-    console.log(`Updating certificate for clb ${this.clbID} on port ${this.clbPort}...`);
-    const updateResp = await this.clbClient.ModifyListener({
+    const modifyReq = {
       LoadBalancerId: this.clbID,
       ListenerId: targetListner.ListenerId,
       Certificate: {
         SSLMode: targetListner.Certificate.SSLMode,
         CertId: certID,
       }
-    });
-    console.log(JSON.stringify(updateResp));
+    };
+    core.info(`Updating certificate for clb ${this.clbID} on port ${this.clbPort}...`);
+    core.debug(JSON.stringify(modifyReq));
+    const updateResp = await this.clbClient.ModifyListener(modifyReq);
+    core.debug('Got response from tencent cloud:');
+    core.info(JSON.stringify(updateResp));
   }
 }
 
@@ -40102,6 +40138,7 @@ module.exports = CLB;
 
 // https://cloud.tencent.com/document/api/400/41665
 
+const core = __nccwpck_require__(2186);
 const SSL_SDK = __nccwpck_require__(847);
 const Client = SSL_SDK.ssl.v20191205.Client;
 
@@ -40127,22 +40164,29 @@ class SSL {
   async uploadCertificate(domain, certificate, privateKey) {
     const now = new Date()
 
-    console.log(`Uploading certificate for domain '${domain}'...`);
-    const sslResponse = await this.sslClient.UploadCertificate({
-        CertificatePublicKey: certificate.toString(),
-        CertificatePrivateKey: privateKey.toString(),
-        CertificateType: 'SVR',
-        Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
-    });
+    core.info(`Uploading certificate for domain '${domain}'...`);
+    const uploadReq = {
+      CertificatePublicKey: certificate.toString(),
+      CertificatePrivateKey: privateKey.toString(),
+      CertificateType: 'SVR',
+      Alias: `${domain} @utc ${now.getUTCFullYear()}-${now.getUTCMonth()+1}-${now.getUTCDate()} ${now.getUTCHours()}:${now.getUTCMinutes()}`,
+    };
+    core.debug('Uploading certificate:');
+    core.debug(JSON.stringify(uploadReq));
+    const sslResponse = await this.sslClient.UploadCertificate(uploadReq);
+    
+    core.debug("Got response from tencent cloud:");
+    core.debug(JSON.stringify(sslResponse));
     
     if (!sslResponse.CertificateId){
-      console.log('Invalid response from Tencent Cloud:');
-      console.log(JSON.stringify(sslResponse));
+      core.info('Invalid response from Tencent Cloud:');
+      core.info(JSON.stringify(sslResponse));
+      core.setFailed();
       process.exit(1);
     }
 
     const certId = sslResponse.CertificateId
-    console.log(`Uploading was successful. Certificate ID: '${certId}'`);
+    core.info(`Uploading was successful. Certificate ID: '${certId}'`);
     return certId;
   }
 }
@@ -40160,16 +40204,19 @@ const fs = __nccwpck_require__(7147);
 
 function readCertKey(config){
   if (!config.path_certificate || !config.path_private_key){
-    console.log(`path_certificate and path_private_key must not be empty`);
+    core.info(`path_certificate and path_private_key must not be empty`);
+    core.setFailed();
     process.exit(1);
   }
 
   if(!fs.existsSync(config.path_certificate)){
-    console.log(`certificate file ${config.path_certificate} does not exist`);
+    core.info(`certificate file ${config.path_certificate} does not exist`);
+    core.setFailed();
     process.exit(1);
   }
   if(!fs.existsSync(config.path_private_key)){
-    console.log(`private key file ${config.path_private_key} does not exist`);
+    core.info(`private key file ${config.path_private_key} does not exist`);
+    core.setFailed();
     process.exit(1);
   }
 
@@ -42159,7 +42206,8 @@ async function main() {
   );
 
   if (supportedServiceTypes.indexOf(config.cloud_service_type) === -1){
-    console.log(`cloud service type ${config.cloud_service_type} not supported.`)
+    core.info(`cloud service type ${config.cloud_service_type} not supported.`);
+    core.setFailed();
     process.exit(1);
   }
   
@@ -42168,9 +42216,12 @@ async function main() {
     const certUploader = new SSL(config);
     const certID = await certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
-      console.log("Empty certificateID got from Tencent Cloud");
+      core.info("Empty certificateID got from Tencent Cloud");
+      core.setFailed();
       process.exit(1);
     }
+    
+    core.setOutput("certificateID", certID);
 
     switch (config.cloud_service_type){
       case "cdn":
@@ -42191,17 +42242,20 @@ async function main() {
     if (config.domain){
       domainMsg = `for domain '${config.domain}' `
     }
-    console.log(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
+    core.info(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
   }
   catch(ex){
-    console.log('unexpected error: ' + ex.message);
-    console.log(ex.stack);
+    core.info('unexpected error: ' + ex.message);
+    core.info(ex.stack);
+    core.setFailed();
     process.exit(1);
   }
 }
 
 main();
 
+
+// todo: support vod, live, ddos, waf. COS?
 })();
 
 module.exports = __webpack_exports__;

@@ -21,7 +21,8 @@ async function main() {
   );
 
   if (supportedServiceTypes.indexOf(config.cloud_service_type) === -1){
-    console.log(`cloud service type ${config.cloud_service_type} not supported.`)
+    core.info(`cloud service type ${config.cloud_service_type} not supported.`);
+    core.setFailed();
     process.exit(1);
   }
   
@@ -30,9 +31,12 @@ async function main() {
     const certUploader = new SSL(config);
     const certID = await certUploader.uploadCertificate(config.domain, ck.cert, ck.key);
     if (!certID){
-      console.log("Empty certificateID got from Tencent Cloud");
+      core.info("Empty certificateID got from Tencent Cloud");
+      core.setFailed();
       process.exit(1);
     }
+    
+    core.setOutput("certificateID", certID);
 
     switch (config.cloud_service_type){
       case "cdn":
@@ -53,13 +57,17 @@ async function main() {
     if (config.domain){
       domainMsg = `for domain '${config.domain}' `
     }
-    console.log(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
+    core.info(`The certificate updating to '${config.cloud_service_type}' ${domainMsg}was successful.`);
   }
   catch(ex){
-    console.log('unexpected error: ' + ex.message);
-    console.log(ex.stack);
+    core.info('unexpected error: ' + ex.message);
+    core.info(ex.stack);
+    core.setFailed();
     process.exit(1);
   }
 }
 
 main();
+
+
+// todo: support vod, live, ddos, waf. COS?

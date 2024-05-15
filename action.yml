@@ -40,5 +40,5 @@ inputs:
     description: 'The protocol of the CLB, required when cloud_service_type is clb'
     required: false
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
